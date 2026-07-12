@@ -7,7 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "VibeCheck accède à tes fichiers audio locaux pour les lire dans l'onglet Album.",
+        "NSAppleMusicUsageDescription": "VibeCheck lit ta bibliothèque musicale locale."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -16,13 +20,25 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "VibeCheck accède à tes fichiers audio locaux.",
+          "savePhotosPermission": "false",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ]
   }
 }

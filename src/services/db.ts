@@ -2,6 +2,8 @@ import { supabase, isMockMode } from './supabase';
 import { getCurrentUser } from './auth';
 import { Track, MoodHistoryEntry, TrackPlayEntry } from '../utils/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
+import { getLevelFromXP } from '../utils/profileResources';
 
 // ─── Utilitaires de date partagés ─────────────────────────────────────────────
 
@@ -229,12 +231,48 @@ export const getTrackHistory = async (): Promise<TrackPlayEntry[]> => {
   return data ? JSON.parse(data) : [];
 };
 
+const XP_KEY = (userId: string) => `vibecheck_xp_${userId}`;
+
+export const getXP = async (): Promise<number> => {
+  const user = getCurrentUser();
+  if (!user) return 0;
+  const data = await AsyncStorage.getItem(XP_KEY(user.id));
+  return data ? parseInt(data, 10) : 0;
+};
+
+export const incrementXP = async (): Promise<number> => {
+  const user = getCurrentUser();
+  if (!user) return 0;
+  const currentXP = await getXP();
+  const nextXP = currentXP + 1;
+  await AsyncStorage.setItem(XP_KEY(user.id), String(nextXP));
+
+  const oldLevel = getLevelFromXP(currentXP);
+  const newLevel = getLevelFromXP(nextXP);
+  if (newLevel > oldLevel) {
+    setTimeout(() => {
+      Alert.alert(
+        '🎉 NIVEAU DÉPASSÉ !',
+        `Félicitations ! Tu passes au Niveau ${newLevel} (Aventurier) en écoutant ${nextXP} musiques !\n\nVa dans ton profil pour découvrir les nouveaux avatars et fonds débloqués ! 🌟`,
+        [{ text: 'SUPER !' }]
+      );
+    }, 300);
+  }
+
+  return nextXP;
+};
+
+export const resetXP = async (): Promise<void> => {
+  const user = getCurrentUser();
+  if (!user) return;
+  await AsyncStorage.removeItem(XP_KEY(user.id));
+};
+
 export const addTrackPlay = async (track: Track, mood: string): Promise<void> => {
   const user = getCurrentUser();
   if (!user) return;
   const history = await getTrackHistory();
-  // Éviter les doublons consécutifs (même chanson rejouée dans la foulée)
-  if (history.length > 0 && history[0].trackId === track.id) return;
+  
   const entry: TrackPlayEntry = {
     id: 'tp-' + Math.random().toString(36).substr(2, 9),
     trackId: track.id,
@@ -246,6 +284,9 @@ export const addTrackPlay = async (track: Track, mood: string): Promise<void> =>
   };
   const updated = [entry, ...history].slice(0, MAX_TRACK_HISTORY);
   await AsyncStorage.setItem(TRACK_HISTORY_KEY(user.id), JSON.stringify(updated));
+  
+  // Incrémenter l'XP globale de l'utilisateur
+  await incrementXP();
 };
 
 // Stats agrégées pour Ralsei

@@ -15,10 +15,11 @@ import {
 import { Audio } from 'expo-av';
 import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import { getMoodHistory, getListenStats, getTrackHistory, calcStreakDays, calcBestStreakDays, getDaysSinceInstall } from '../services/db';
+import { getMoodHistory, getListenStats, getTrackHistory, calcStreakDays, calcBestStreakDays, getDaysSinceInstall, getXP } from '../services/db';
 import { MoodHistoryEntry, MOODS } from '../utils/constants';
 import { PixelIcon } from '../components/PixelIcon';
 import { PixelEmoji } from '../components/PixelEmoji';
+import { getLevelFromXP, getXPForNextLevel } from '../utils/profileResources';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -90,6 +91,7 @@ const QUESTIONS: Q[] = [
   { id: 'tracks',       label: 'Mes chansons écoutées',  icon: 'note',        cat: 'stats' },
   { id: 'topartist',    label: 'Mon artiste préféré',    icon: 'star',        cat: 'stats' },
   { id: 'timeslot',     label: 'Mon heure de prédil.',   icon: 'calendar',    cat: 'stats' },
+  { id: 'xp_level',     label: 'Mon niveau / XP Musique',icon: 'star',        cat: 'stats' },
   { id: 'joyeux',       label: 'Sessions Joyeux',        icon: 'note',        cat: 'vibe'  },
   { id: 'melancolique', label: 'Sessions Mélancolique',  icon: 'note',        cat: 'vibe'  },
   { id: 'energique',    label: 'Sessions Énergique',     icon: 'note',        cat: 'vibe'  },
@@ -131,8 +133,10 @@ const moodComment = (n: number) => { if (n === 0) return 'Aucune session.'; if (
 const buildReply = (
   qId: string,
   history: MoodHistoryEntry[],
-  listenStats?: Awaited<ReturnType<typeof getListenStats>>,
-  trackHistory?: Awaited<ReturnType<typeof getTrackHistory>>
+  listenStats: Awaited<ReturnType<typeof getListenStats>>,
+  trackHistory: Awaited<ReturnType<typeof getTrackHistory>>,
+  xp: number,
+  userLevel: number
 ): { text: string; face: string; schema?: string } => {
   const sorted = [...history].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const total  = history.length;
@@ -208,6 +212,21 @@ const buildReply = (
         ? '* L\'après-midi...\nUne heure calme. *\nBonne période pour\nse concentrer.'
         : '* Le soir. Hmm. *\nC\'est un moment\ndoux et introspectif.\nJe comprends.';
       return { face: slotFace, text: `Tu écoutes surtout\n${slot}.\n\n${slotComment}`, schema: `HEURE FAVORITE\n──────────────\n${slot.toUpperCase()}\n${listenStats.topHour}h00 en moyenne` };
+    }
+
+    case 'xp_level': {
+      const nextLevelXP = getXPForNextLevel(userLevel);
+      const songsRemaining = userLevel >= 6 ? 0 : nextLevelXP - xp;
+      
+      const levelText = userLevel >= 6
+        ? `* C'EST INCROYABLE ! *\nTu es au Niveau 6 (Niveau Maximal) !\nTu as écouté un total de ${xp} chansons et débloqué tous les avatars et décors de profil ! 🏆\nTu es un véritable explorateur de VibeCheck.`
+        : `Tu es actuellement au Niveau ${userLevel} avec ${xp} musiques écoutées.\n\n* Plus que ${songsRemaining} musiques avant le Niveau ${userLevel + 1} ! *\n\nContinue d'écouter tes playlists pour débloquer de nouveaux décors de fond et avatars pixelisés dans ton profil.`;
+        
+      return { 
+        face: userLevel >= 6 ? 'r23' : 'r5', 
+        text: levelText,
+        schema: `NIVEAU AVENTURIER\n────────────────────\nNiveau actuel     : ${userLevel}\nTotal XP/Musiques : ${xp} XP\nProchain palier   : ${userLevel >= 6 ? 'MAX' : nextLevelXP + ' XP'}`
+      };
     }
 
     case 'progression': {
@@ -434,6 +453,8 @@ export const HistoryScreen: React.FC = () => {
   const [face, setFace]         = useState('r1');
   const [cat, setCat]           = useState<'stats'|'vibe'|'perso'>('stats');
   const [panelOpen, setPanelOpen] = useState(false);
+  const [xp, setXp]             = useState(0);
+  const [userLevel, setUserLevel] = useState(0);
   const chatRef    = useRef<ScrollView>(null);
   const fadeAnim   = useRef(new Animated.Value(0)).current;
   const faceScale  = useRef(new Animated.Value(1)).current;
@@ -446,16 +467,19 @@ export const HistoryScreen: React.FC = () => {
 
   const boot = async () => {
     try {
-      const [data, ls, th, days] = await Promise.all([
+      const [data, ls, th, days, currentXp] = await Promise.all([
         getMoodHistory(),
         getListenStats(),
         getTrackHistory(),
         getDaysSinceInstall(),
+        getXP(),
       ]);
       setHistory(data);
       setListenStats(ls);
       setTrackHistory(th);
       setDaysSinceInstall(days);
+      setXp(currentXp);
+      setUserLevel(getLevelFromXP(currentXp));
       const g = buildGreeting(data);
       setFace(g.face);
       setMessages([{ id:'g0', who:'ralsei', text:g.text, face:g.face }]);
@@ -526,7 +550,7 @@ export const HistoryScreen: React.FC = () => {
     setTyping(true);
     setTimeout(() => chatRef.current?.scrollToEnd({ animated:true }), 80);
     setTimeout(() => {
-      const res = buildReply(q.id, history, listenStats, trackHistory);
+      const res = buildReply(q.id, history, listenStats, trackHistory, xp, userLevel);
       bounceFace(res.face);
       setMessages(prev => [...prev, { id:Date.now()+'r', who:'ralsei', text:res.text, face:res.face, schema:res.schema }]);
       setTyping(false);
@@ -770,7 +794,6 @@ const styles = StyleSheet.create({
   avatarFace: {
     width: 48,
     height: 48,
-    imageRendering: 'pixelated' as any,
     flexShrink: 0,
     marginTop: 4,
   },
@@ -804,7 +827,6 @@ const styles = StyleSheet.create({
   lancerGif: {
     width: 180,
     height: 180,
-    imageRendering: 'pixelated' as any,
   },
 
   bubbleP: {

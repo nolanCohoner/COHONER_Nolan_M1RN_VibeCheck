@@ -15,10 +15,11 @@ import { PlaylistScreen } from './src/screens/PlaylistScreen';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import { AlbumScreen } from './src/screens/AlbumScreen';
 
 // Composants
 import { MiniPlayer } from './src/components/MiniPlayer';
-import { PixelMusicIcon, PixelBookIcon, PixelChatIcon, PixelUserIcon } from './src/components/PixelIcons';
+import { PixelMusicIcon, PixelBookIcon, PixelChatIcon, PixelUserIcon, PixelAlbumIcon } from './src/components/PixelIcons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -86,6 +87,8 @@ const AppTabs: React.FC = () => {
               return <PixelMusicIcon color={color} size={s} />;
             } else if (route.name === 'Favorites') {
               return <PixelBookIcon color={color} size={s} />;
+            } else if (route.name === 'Album') {
+              return <PixelAlbumIcon color={color} size={s} />;
             } else if (route.name === 'History') {
               return <PixelChatIcon color={color} size={s} />;
             } else if (route.name === 'Profile') {
@@ -109,6 +112,11 @@ const AppTabs: React.FC = () => {
           name="Favorites"
           component={FavoritesScreen}
           options={{ title: 'FAVORIS' }}
+        />
+        <Tab.Screen
+          name="Album"
+          component={AlbumScreen}
+          options={{ title: 'ALBUM' }}
         />
         <Tab.Screen
           name="History"

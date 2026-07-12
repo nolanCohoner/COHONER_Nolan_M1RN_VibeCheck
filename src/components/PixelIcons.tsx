@@ -133,6 +133,32 @@ export const PixelChatIcon: React.FC<IconProps> = ({ color, size = 20 }) => {
   );
 };
 
+// 💿 Disque vinyle pixel-art (Album)
+export const PixelAlbumIcon: React.FC<IconProps> = ({ color, size = 20 }) => {
+  const u = size / 10;
+  const cx = size / 2;
+  return (
+    <View style={{ width: size, height: size }}>
+      {/* Anneau extérieur — 4 côtés */}
+      <View style={{ position:'absolute', left: u,      top: 0,       width: size - u*2, height: u,      backgroundColor: color }} />
+      <View style={{ position:'absolute', left: u,      bottom: 0,    width: size - u*2, height: u,      backgroundColor: color }} />
+      <View style={{ position:'absolute', left: 0,      top: u,       width: u,          height: size-u*2, backgroundColor: color }} />
+      <View style={{ position:'absolute', right: 0,     top: u,       width: u,          height: size-u*2, backgroundColor: color }} />
+      {/* Coins arrondis pixel */}
+      <View style={{ position:'absolute', left: u*0.5,  top: u*0.5,   width: u,          height: u,      backgroundColor: color }} />
+      <View style={{ position:'absolute', right: u*0.5, top: u*0.5,   width: u,          height: u,      backgroundColor: color }} />
+      <View style={{ position:'absolute', left: u*0.5,  bottom: u*0.5,width: u,          height: u,      backgroundColor: color }} />
+      <View style={{ position:'absolute', right: u*0.5, bottom: u*0.5,width: u,          height: u,      backgroundColor: color }} />
+      {/* Rainures internes */}
+      <View style={{ position:'absolute', left: u*2,   top: u*2,     width: size-u*4,   height: u*0.6,  backgroundColor: color, opacity: 0.5 }} />
+      <View style={{ position:'absolute', left: u*2,   bottom: u*2,  width: size-u*4,   height: u*0.6,  backgroundColor: color, opacity: 0.5 }} />
+      <View style={{ position:'absolute', left: u*2,   top: u*3.5,   width: size-u*4,   height: u*0.6,  backgroundColor: color, opacity: 0.5 }} />
+      {/* Trou central */}
+      <View style={{ position:'absolute', left: cx-u,  top: cx-u,    width: u*2,        height: u*2,    backgroundColor: color }} />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   notehead: {
     position: 'absolute',

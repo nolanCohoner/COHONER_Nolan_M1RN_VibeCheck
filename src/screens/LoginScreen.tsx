@@ -11,8 +11,12 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { signUp, signIn } from '../services/auth';
+
+const LogoImg = require('../../ConnexionLogin/logo.png');
 
 // Palette VibeCheck
 const C = {
@@ -22,9 +26,13 @@ const C = {
   SAGE_DARK: '#9FCDA8',
   TEAL: '#7DC2A5',
   INK: '#2D3B2D',
-  INK_LIGHT: '#5A6B5A',
-  ERROR: '#C0392B',
+  INK_LIGHT: '#A0B0A0',
+  ERROR: '#F38071',
+  WHITE: '#FFFFFF',
 };
+
+const GRADIENT_COLORS = ['#7DC2A5', '#9FCDA8', '#C7DDC5', '#E3EBD0', '#F1F1D3'] as const;
+const GRADIENT_LOCATIONS = [0, 0.25, 0.5, 0.75, 1] as const;
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -61,7 +69,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.CREAM} />
+      <StatusBar barStyle="light-content" backgroundColor="#0F120F" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
@@ -71,22 +79,9 @@ export const LoginScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* === LOGO === */}
+          {/* === LOGO IMAGE === */}
           <View style={styles.logoSection}>
-            {/* Motif de 3 pixels décoratifs */}
-            <View style={styles.pixelDots}>
-              <View style={[styles.pixelDot, { backgroundColor: C.SAGE_MID }]} />
-              <View style={[styles.pixelDot, { backgroundColor: C.SAGE_DARK }]} />
-              <View style={[styles.pixelDot, { backgroundColor: C.TEAL }]} />
-            </View>
-
-            <View style={styles.logoBox}>
-              {/* "VIBE" en TEAL, "CHECK" en INK */}
-              <Text style={[styles.logoText, { color: C.TEAL }]}>VIBE</Text>
-              <View style={styles.logoDot} />
-              <Text style={[styles.logoText, { color: C.INK }]}>CHECK</Text>
-            </View>
-
+            <Image source={LogoImg} style={styles.logoImage} resizeMode="contain" />
             <Text style={styles.tagline}>Ton humeur, ta musique.</Text>
           </View>
 
@@ -96,7 +91,7 @@ export const LoginScreen: React.FC = () => {
             <View style={styles.formTitleRow}>
               <View style={styles.formTitleDot} />
               <Text style={styles.formTitle}>
-                {isRegistering ? 'CREER UN COMPTE' : 'CONNEXION'}
+                {isRegistering ? 'CRÉER UN COMPTE' : 'CONNEXION'}
               </Text>
             </View>
 
@@ -118,7 +113,7 @@ export const LoginScreen: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   placeholder="adresse@email.com"
-                  placeholderTextColor={C.INK_LIGHT}
+                  placeholderTextColor="#7A8A7A"
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -141,7 +136,7 @@ export const LoginScreen: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
-                  placeholderTextColor={C.INK_LIGHT}
+                  placeholderTextColor="#7A8A7A"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -162,15 +157,17 @@ export const LoginScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Bouton principal avec ombre pixel-art */}
-            <View style={styles.submitBtnWrapper}>
-              {/* Ombre décalée pixel-art */}
-              <View style={styles.submitBtnShadow} />
-              <TouchableOpacity
-                onPress={handleSubmit}
-                style={styles.submitBtn}
-                disabled={loading}
-                activeOpacity={0.9}
+            {/* Bouton principal avec dégradé style Deltarune */}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              style={styles.submitBtn}
+              disabled={loading}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={GRADIENT_COLORS}
+                locations={GRADIENT_LOCATIONS}
+                style={styles.btnGradient}
               >
                 {loading ? (
                   <ActivityIndicator color={C.INK} size="small" />
@@ -179,8 +176,8 @@ export const LoginScreen: React.FC = () => {
                     {isRegistering ? 'CREER MON COMPTE' : 'SE CONNECTER'}
                   </Text>
                 )}
-              </TouchableOpacity>
-            </View>
+              </LinearGradient>
+            </TouchableOpacity>
 
             {/* Séparateur */}
             <View style={styles.separator}>
@@ -197,20 +194,13 @@ export const LoginScreen: React.FC = () => {
             >
               <Text style={styles.secondaryText}>
                 {isRegistering
-                  ? "Deja un compte ?"
+                  ? "Déjà un compte ?"
                   : "Pas encore inscrit ?"}
               </Text>
               <Text style={styles.secondaryLink}>
                 {isRegistering ? ' Se connecter' : " S'inscrire"}
               </Text>
             </TouchableOpacity>
-          </View>
-
-          {/* 3 pixels bas */}
-          <View style={styles.pixelDots}>
-            <View style={[styles.pixelDot, { backgroundColor: C.TEAL }]} />
-            <View style={[styles.pixelDot, { backgroundColor: C.SAGE_DARK }]} />
-            <View style={[styles.pixelDot, { backgroundColor: C.SAGE_MID }]} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -221,7 +211,7 @@ export const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: C.CREAM,
+    backgroundColor: '#0F120F',
   },
   container: { flex: 1 },
   scrollContainer: {
@@ -229,51 +219,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 36,
-    gap: 24,
+    gap: 20,
   },
 
   // Logo
   logoSection: {
     alignItems: 'center',
-    gap: 12,
-  },
-  pixelDots: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-  },
-  pixelDot: {
-    width: 10,
-    height: 10,
-  },
-  logoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
+    marginBottom: 8,
   },
-  logoText: {
-    fontSize: 22,
-    fontFamily: 'PressStart2P-Regular',
-    letterSpacing: 2,
-  },
-  logoDot: {
-    width: 8,
-    height: 8,
-    backgroundColor: C.SAGE_DARK,
+  logoImage: {
+    width: 220,
+    height: 90,
   },
   tagline: {
     fontSize: 7,
     fontFamily: 'PressStart2P-Regular',
-    color: C.INK,
+    color: '#E3EBD0',
     letterSpacing: 1,
+    marginTop: 8,
   },
 
   // Carte formulaire
   formCard: {
-    backgroundColor: C.SAGE_LIGHT,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     borderWidth: 2,
-    borderColor: C.SAGE_MID,
-    padding: 20,
+    borderColor: '#FFFFFF',
+    padding: 24,
     gap: 0,
   },
   formTitleRow: {
@@ -290,13 +262,13 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 9,
     fontFamily: 'PressStart2P-Regular',
-    color: C.INK,
+    color: '#FFFFFF',
     letterSpacing: 1,
   },
 
   // Erreur
   errorBox: {
-    backgroundColor: '#FCE4E4',
+    backgroundColor: 'rgba(192, 57, 43, 0.20)',
     borderWidth: 2,
     borderColor: C.ERROR,
     padding: 10,
@@ -314,16 +286,16 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 7,
     fontFamily: 'PressStart2P-Regular',
-    color: C.INK_LIGHT,
+    color: '#FFFFFF',
     marginBottom: 6,
     letterSpacing: 1,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: C.CREAM,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 2,
-    borderColor: C.SAGE_MID,
+    borderColor: '#FFFFFF',
     height: 52,
     paddingHorizontal: 12,
   },
@@ -342,7 +314,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: C.INK,
+    color: '#FFFFFF',
     fontSize: 9,
     fontFamily: 'PressStart2P-Regular',
     height: '100%',
@@ -351,34 +323,25 @@ const styles = StyleSheet.create({
   eyeBtn: { padding: 4 },
   eyeText: {
     fontSize: 14,
-    color: C.INK_LIGHT,
+    color: '#A0B0A0',
   },
   eyeTextActive: {
     color: C.TEAL,
   },
 
-  // Bouton principal avec ombre pixel
-  submitBtnWrapper: {
-    position: 'relative',
-    marginTop: 8,
-    marginBottom: 0,
-  },
-  submitBtnShadow: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    left: 4,
-    top: 4,
-    backgroundColor: C.SAGE_DARK,
-  },
+  // Bouton principal
   submitBtn: {
     height: 52,
-    backgroundColor: C.TEAL,
+    marginTop: 18,
+    backgroundColor: 'transparent',
+  },
+  btnGradient: {
+    width: '100%',
+    height: '100%',
     borderWidth: 2,
-    borderColor: C.INK,
+    borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
   },
   submitText: {
     color: C.INK,
@@ -397,12 +360,12 @@ const styles = StyleSheet.create({
   separatorLine: {
     flex: 1,
     height: 2,
-    backgroundColor: C.SAGE_MID,
+    backgroundColor: '#3D4D3D',
   },
   separatorText: {
     fontSize: 7,
     fontFamily: 'PressStart2P-Regular',
-    color: C.INK_LIGHT,
+    color: '#7A8A7A',
   },
 
   // Bouton secondaire — lien TEAL
@@ -414,7 +377,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   secondaryText: {
-    color: C.INK_LIGHT,
+    color: '#A0B0A0',
     fontSize: 7,
     fontFamily: 'PressStart2P-Regular',
     lineHeight: 14,
